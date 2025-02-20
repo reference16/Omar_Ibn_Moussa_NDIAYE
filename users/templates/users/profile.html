@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Mon Profil</h3>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Affichage de l'avatar -->
+                    <div class="mb-3">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle img-thumbnail" width="150" height="150">
+                        {% else %}
+                            <label for="avatar-upload" class="d-inline-block">
+                                <img src="https://via.placeholder.com/150?text=Photo" alt="Ajouter un avatar" class="rounded-circle img-thumbnail" width="150" height="150">
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <input type="file" id="avatar-upload" class="d-none">
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Nom d'utilisateur:</strong></div>
+                        <div class="col-sm-8">{{ user.username }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Email:</strong></div>
+                        <div class="col-sm-8">{{ user.email|default:"Non renseigné" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Prénom:</strong></div>
+                        <div class="col-sm-8">{{ user.first_name|default:"Non renseigné" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Nom:</strong></div>
+                        <div class="col-sm-8">{{ user.last_name|default:"Non renseigné" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Rôle:</strong></div>
+                        <div class="col-sm-8">{{ user.get_role_display }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Date d'inscription:</strong></div>
+                        <div class="col-sm-8">{{ user.date_joined|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    {% if not user.first_name or not user.last_name or not user.email or not user.avatar %}
+                        <a href="{% url 'users:profile_edit' %}" class="btn btn-warning">Mettre à jour mon profil</a>
+                    {% else %}
+                        <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">Modifier mon profil</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
