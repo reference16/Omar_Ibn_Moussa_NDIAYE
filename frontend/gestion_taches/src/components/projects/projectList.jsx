@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectCard from './ProjectCard';
 import ProjectForm from './ProjectForm';
-import { fetchProjects } from '../../services/projectServices';
+import { fetchProjects, PROJECT_STATUS } from '../../services/projectServices';
 
 const ProjectList = ({ role = 'student', onProjectSelect }) => {
   const navigate = useNavigate();
@@ -23,14 +23,15 @@ const ProjectList = ({ role = 'student', onProjectSelect }) => {
       setError('');
       const data = await fetchProjects();
       
-      // Filtrer selon le rôle si nécessaire
+      // Filtrer selon le rôle et le statut du projet
       let filteredProjects = data;
       
       if (role === 'student') {
-        // Étudiants: voir seulement les projets où ils sont membres
+        // Étudiants: voir les projets où ils sont membres ET qui sont en cours/terminés
+        // OU les projets qu'ils possèdent (quel que soit le statut)
         filteredProjects = data.filter(project => 
-          project.members.some(member => member.id === user.id) || 
-          project.owner.id === user.id
+          (project.owner.id === user.id) || 
+          (project.members.some(member => member.id === user.id) && project.status !== PROJECT_STATUS.TODO)
         );
       } else if (role === 'teacher') {
         // Enseignants: voir les projets qu'ils ont créés
@@ -54,6 +55,10 @@ const ProjectList = ({ role = 'student', onProjectSelect }) => {
   
   const handleProjectDeleted = (projectId) => {
     setProjects(projects.filter(p => p.id !== projectId));
+  };
+
+  const handleProjectUpdated = (updatedProject) => {
+    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
   };
   
   // Modification de la permission de création
@@ -115,6 +120,7 @@ const ProjectList = ({ role = 'student', onProjectSelect }) => {
                     project={project} 
                     role={role}
                     onDelete={handleProjectDeleted}
+                    onUpdate={handleProjectUpdated}
                   />
                 </div>
               ))}

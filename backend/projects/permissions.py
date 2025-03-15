@@ -5,11 +5,20 @@ class IsProjectOwnerOrMember(permissions.BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        # Lecture autorisée pour les membres et le propriétaire
+        # Le propriétaire a toujours tous les droits
+        if request.user == obj.owner:
+            return True
+            
+        # Pour les projets "à faire", seul le propriétaire peut voir/modifier
+        if obj.status == 'todo':
+            return False
+            
+        # Pour les projets "en cours", les membres peuvent voir
         if request.method in permissions.SAFE_METHODS:
-            return request.user == obj.owner or request.user in obj.members.all()
+            return request.user in obj.members.all()
+            
         # Modification/Suppression uniquement pour le propriétaire
-        return request.user == obj.owner
+        return False
 
 def check_is_project_owner(user, project):
     """

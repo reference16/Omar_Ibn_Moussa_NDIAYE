@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectList from '../projects/projectList';
 import { fetchTasks, fetchTaskStatistics } from '../../services/taskService';
+import { PROJECT_STATUS_LABELS } from '../../services/projectServices';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -137,9 +138,14 @@ const StudentDashboard = () => {
             </h2>
             
             <div className="bg-gray-50 rounded-md p-4">
-              <div className="flex items-center mb-4 text-yellow-500">
-                <span className="mr-2 text-xl">📁</span>
-                <h3 className="font-semibold">Mes Projets</h3>
+              <div className="flex flex-col space-y-2 mb-4">
+                <div className="flex items-center text-yellow-500">
+                  <span className="mr-2 text-xl">📁</span>
+                  <h3 className="font-semibold">Mes Projets</h3>
+                </div>
+                <p className="text-sm text-gray-600 ml-7">
+                  Note : Les projets "À faire" ne sont visibles que par leurs créateurs. Les projets deviennent visibles pour les membres une fois passés "En cours".
+                </p>
               </div>
               
               <div className="pl-4 border-l-2 border-yellow-200">
@@ -162,7 +168,7 @@ const StudentDashboard = () => {
       
       {/* Footer simple */}
       <footer className="w-full bg-gray-800 text-white py-4 text-center">
-        <p>© 2025 FlowTask - Plateforme de gestion de tâches</p>
+        <p> 2025 FlowTask - Plateforme de gestion de tâches</p>
       </footer>
     </div>
   );

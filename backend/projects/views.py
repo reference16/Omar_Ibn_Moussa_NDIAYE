@@ -18,11 +18,17 @@ from rest_framework.response import Response
 
 @login_required
 def project_list(request):
-    # Récupérer les projets dont l'utilisateur est propriétaire ou membre
-    user_projects = Project.objects.filter(members=request.user) | Project.objects.filter(owner=request.user)
-    user_projects = user_projects.distinct()
+    user = request.user
+    # Pour les projets "à faire", montrer uniquement ceux dont l'utilisateur est propriétaire
+    todo_projects = Project.objects.filter(owner=user, status='todo')
+    # Pour les autres projets, montrer ceux dont l'utilisateur est membre ou propriétaire
+    other_projects = Project.objects.filter(
+        (Q(members=user) | Q(owner=user)) & ~Q(status='todo')
+    ).distinct()
+    
+    user_projects = todo_projects | other_projects
     return render(request, 'projects/dashboard.html', {
-        'projects': user_projects
+        'projects': user_projects.distinct()
     })
 
 @login_required
@@ -32,9 +38,8 @@ def project_create(request):
         if form.is_valid():
             project = form.save(commit=False)
             project.owner = request.user
+            project.status = 'todo'  # État initial: à faire
             project.save()
-            # Sauvegarder les membres après la création du projet
-            form.save_m2m()  # Important pour les champs ManyToMany
             # Ajouter automatiquement le créateur comme membre
             project.members.add(request.user)
             messages.success(request, 'Projet créé avec succès!')
@@ -59,7 +64,13 @@ def project_edit(request, pk):
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
-            form.save()
+            # Si le projet passe de 'todo' à 'in_progress', on garde les membres sélectionnés
+            old_status = project.status
+            project = form.save()
+            
+            if old_status == 'todo' and project.status == 'in_progress':
+                messages.success(request, 'Le projet est maintenant visible par tous les membres!')
+            
             messages.success(request, 'Projet modifié avec succès!')
             return redirect('projects:project_list')
     else:
@@ -93,6 +104,10 @@ def project_delete(request, pk):
 def project_tasks(request, pk):
     project = get_object_or_404(Project, pk=pk)
     # Vérifier que l'utilisateur est membre ou propriétaire
+    if project.status == 'todo' and project.owner != request.user:
+        messages.error(request, "Ce projet est en cours de préparation.")
+        return redirect('projects:project_list')
+    
     if request.user not in project.members.all() and request.user != project.owner:
         messages.error(request, "Vous n'avez pas accès à ce projet.")
         return redirect('projects:project_list')
@@ -112,25 +127,17 @@ class ProjectListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        # Utiliser Q objects pour combiner les conditions sans union()
         return Project.objects.filter(
-            Q(owner=user) | Q(members=user)
+            Q(owner=user) |  # Tous les projets dont l'utilisateur est propriétaire
+            (Q(members=user) & ~Q(status='todo'))  # Les projets où l'utilisateur est membre ET qui ne sont pas "à faire"
         ).distinct().select_related('owner')
 
     def perform_create(self, serializer):
-        members_ids = serializer.validated_data.pop('members_ids', [])
-        project = serializer.save(owner=self.request.user)
-        
+        # Créer le projet avec le statut initial "à faire"
+        project = serializer.save(owner=self.request.user, status='todo')
         # Ajouter le propriétaire comme membre
         project.members.add(self.request.user)
-        
-        # Ajouter les membres sélectionnés
-        if members_ids:
-            for member_id in members_ids:
-                try:
-                    user = CustomUser.objects.get(id=member_id)
-                    project.members.add(user)
-                except CustomUser.DoesNotExist:
-                    continue
 
 class ProjectDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
@@ -141,31 +148,17 @@ class ProjectDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        old_status = instance.status
+        
         serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
         serializer.is_valid(raise_exception=True)
         
-        members_ids = serializer.validated_data.pop('members_ids', None)
+        # Si le projet passe de 'todo' à 'in_progress', on garde les membres
+        new_status = serializer.validated_data.get('status', old_status)
         
-        # Mettre à jour les champs standard
         self.perform_update(serializer)
         
-        # Si des membres ont été fournis, mettre à jour la relation
-        if members_ids is not None:
-            # Vider tous les membres actuels (sauf le propriétaire)
-            current_members = instance.members.all()
-            for member in current_members:
-                if member != instance.owner:
-                    instance.members.remove(member)
-            
-            # S'assurer que le propriétaire est toujours membre
-            instance.members.add(instance.owner)
-            
-            # Ajouter les nouveaux membres
-            for member_id in members_ids:
-                try:
-                    user = CustomUser.objects.get(id=member_id)
-                    instance.members.add(user)
-                except CustomUser.DoesNotExist:
-                    continue
+        # S'assurer que le propriétaire est toujours membre
+        instance.members.add(instance.owner)
         
         return Response(serializer.data)

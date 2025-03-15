@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { createProject, updateProject } from '../../services/projectServices';
+import { createProject, updateProject, PROJECT_STATUS, PROJECT_STATUS_LABELS } from '../../services/projectServices';
 import { fetchUsers } from '../../services/projectServices';
 import AuthContext from '../../context/authContext';
 
@@ -8,7 +8,8 @@ const ProjectForm = ({ project, onProjectCreated, onProjectUpdated }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    members: []
+    members: [],
+    status: PROJECT_STATUS.TODO
   });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,8 @@ const ProjectForm = ({ project, onProjectCreated, onProjectUpdated }) => {
         setFormData({
           name: project.name,
           description: project.description,
-          members: filteredMembers.map(member => member.id)
+          members: filteredMembers.map(member => member.id),
+          status: project.status
         });
       }
       await loadUsers();
@@ -85,8 +87,12 @@ const ProjectForm = ({ project, onProjectCreated, onProjectUpdated }) => {
         result = await updateProject(project.id, formData);
         if (onProjectUpdated) onProjectUpdated(result);
       } else {
-        // Mode création
-        result = await createProject(formData);
+        // Mode création - toujours commencer avec le statut "à faire"
+        const newProjectData = {
+          ...formData,
+          status: PROJECT_STATUS.TODO
+        };
+        result = await createProject(newProjectData);
         if (onProjectCreated) onProjectCreated(result);
       }
       
@@ -95,7 +101,8 @@ const ProjectForm = ({ project, onProjectCreated, onProjectUpdated }) => {
         setFormData({
           name: '',
           description: '',
-          members: []
+          members: [],
+          status: PROJECT_STATUS.TODO
         });
       }
     } catch (error) {
@@ -146,6 +153,34 @@ const ProjectForm = ({ project, onProjectCreated, onProjectUpdated }) => {
           disabled={loading}
         />
       </div>
+      
+      {project && (
+        <div className="mb-4">
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            État du projet
+          </label>
+          <select
+            id="status"
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            disabled={loading || !project || user?.role === 'student'}
+          >
+            {Object.entries(PROJECT_STATUS_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          {user?.role === 'student' && (
+            <p className="mt-1 text-xs text-amber-600">
+              <span className="mr-1">ℹ️</span>
+              Seuls les enseignants peuvent modifier l'état du projet
+            </p>
+          )}
+        </div>
+      )}
       
       <div className="mb-6">
         <label htmlFor="members" className="block text-sm font-medium text-gray-700 mb-1">

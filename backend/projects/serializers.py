@@ -16,7 +16,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'owner', 'members', 'members_ids', 'is_owner', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'status', 'owner', 'members', 'members_ids', 'is_owner', 'created_at', 'updated_at']
         read_only_fields = ['owner', 'created_at', 'updated_at']
 
     def get_is_owner(self, obj):

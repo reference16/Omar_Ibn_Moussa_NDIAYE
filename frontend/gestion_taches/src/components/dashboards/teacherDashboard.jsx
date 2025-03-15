@@ -2,7 +2,7 @@ import React, { useEffect, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectList from '../projects/projectList';
-import { fetchProjects } from '../../services/projectServices';
+import { fetchProjects, PROJECT_STATUS } from '../../services/projectServices';
 import { fetchTaskStatistics } from '../../services/taskService';
 
 const TeacherDashboard = () => {
@@ -10,8 +10,9 @@ const TeacherDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const [projectStats, setProjectStats] = useState({
     total: 0,
-    active: 0,
-    completed: 0
+    todo: 0,
+    in_progress: 0,
+    done: 0
   });
   const [taskStats, setTaskStats] = useState({
     todo: 0,
@@ -44,15 +45,14 @@ const TeacherDashboard = () => {
       ]);
       
       // Calculer des statistiques sur les projets
-      const active = projects.length - stats.done;
-      const completed = stats.done;
-      
-      setProjectStats({
+      const projectsStats = {
         total: projects.length,
-        active,
-        completed
-      });
+        todo: projects.filter(p => p.status === PROJECT_STATUS.TODO).length,
+        in_progress: projects.filter(p => p.status === PROJECT_STATUS.IN_PROGRESS).length,
+        done: projects.filter(p => p.status === PROJECT_STATUS.DONE).length
+      };
       
+      setProjectStats(projectsStats);
       setTaskStats(stats);
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
@@ -117,20 +117,25 @@ const TeacherDashboard = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-teal-500">
                   <h3 className="text-gray-700 mb-1">Total Projets</h3>
                   <p className="text-2xl font-bold text-teal-500">{projectStats.total}</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-blue-500">
-                  <h3 className="text-gray-700 mb-1">Projets Actifs</h3>
-                  <p className="text-2xl font-bold text-blue-500">{projectStats.active}</p>
+                  <h3 className="text-gray-700 mb-1">À Faire</h3>
+                  <p className="text-2xl font-bold text-blue-500">{projectStats.todo}</p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-md p-4 border-l-4 border-yellow-500">
+                  <h3 className="text-gray-700 mb-1">En Cours</h3>
+                  <p className="text-2xl font-bold text-yellow-500">{projectStats.in_progress}</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-green-500">
-                  <h3 className="text-gray-700 mb-1">Projets Terminés</h3>
-                  <p className="text-2xl font-bold text-green-500">{projectStats.completed}</p>
+                  <h3 className="text-gray-700 mb-1">Terminés</h3>
+                  <p className="text-2xl font-bold text-green-500">{projectStats.done}</p>
                 </div>
               </div>
             )}
@@ -203,7 +208,19 @@ const TeacherDashboard = () => {
             </h2>
             
             <div className="bg-gray-50 rounded-md p-4">
-              <ProjectList role="teacher" />
+              <div className="flex flex-col space-y-2 mb-4">
+                <div className="flex items-center text-yellow-500">
+                  <span className="mr-2 text-xl">📁</span>
+                  <h3 className="font-semibold">Gestion des Projets</h3>
+                </div>
+                <p className="text-sm text-gray-600 ml-7">
+                  En tant qu'enseignant, vous pouvez voir et gérer tous vos projets. Vous pouvez changer leur état de "À faire" à "En cours" pour les rendre visibles aux étudiants.
+                </p>
+              </div>
+              
+              <div className="pl-4 border-l-2 border-yellow-200">
+                <ProjectList role="teacher" />
+              </div>
             </div>
           </div>
         </div>

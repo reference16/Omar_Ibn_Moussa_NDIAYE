@@ -1,5 +1,18 @@
 import axios from '../axios';
 
+// Constantes pour les états de projet
+export const PROJECT_STATUS = {
+  TODO: 'todo',
+  IN_PROGRESS: 'in_progress',
+  DONE: 'done'
+};
+
+export const PROJECT_STATUS_LABELS = {
+  [PROJECT_STATUS.TODO]: 'À faire',
+  [PROJECT_STATUS.IN_PROGRESS]: 'En cours',
+  [PROJECT_STATUS.DONE]: 'Terminé'
+};
+
 export const fetchProjects = async () => {
   try {
     const token = localStorage.getItem('access_token');
@@ -22,7 +35,7 @@ export const createProject = async (projectData) => {
     const data = {
       name: projectData.name,
       description: projectData.description,
-      // Envoyer les IDs des membres sélectionnés dans le champ members_ids
+      // Le status est automatiquement 'todo' dans le backend
       members_ids: projectData.members || []
     };
     
@@ -45,8 +58,8 @@ export const updateProject = async (projectId, projectData) => {
     const data = {
       name: projectData.name,
       description: projectData.description,
-      // Renommer members en members_ids pour l'API
-      members_ids: projectData.members || []
+      members_ids: projectData.members || [],
+      status: projectData.status // Ajout du status dans la mise à jour
     };
     
     const response = await axios.patch(`projects/${projectId}/`, data, {
@@ -57,6 +70,21 @@ export const updateProject = async (projectId, projectData) => {
     return response.data;
   } catch (error) {
     console.error("Erreur lors de la mise à jour du projet :", error);
+    throw error;
+  }
+};
+
+export const updateProjectStatus = async (projectId, status) => {
+  try {
+    const token = localStorage.getItem('access_token');
+    const response = await axios.patch(`projects/${projectId}/`, { status }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du statut du projet :", error);
     throw error;
   }
 };
