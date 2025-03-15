@@ -1,7 +1,7 @@
 import React, { useEffect, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
-import ProjectList from '../projects/projectList';
+import projectList from '../projects/projectList';
 import { fetchProjects, PROJECT_STATUS } from '../../services/projectServices';
 import { fetchTaskStatistics } from '../../services/taskService';
 
@@ -198,7 +198,7 @@ const TeacherDashboard = () => {
             </h2>
             
             <div className="bg-gray-50 rounded-md p-4">
-              <ProjectList onProjectsChange={loadStats} />
+              <projectList onProjectsChange={loadStats} />
             </div>
           </div>
         </div>

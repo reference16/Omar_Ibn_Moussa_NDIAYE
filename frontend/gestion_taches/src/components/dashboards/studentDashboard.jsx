@@ -72,10 +72,10 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-screen overflow-x-hidden bg-gray-100">
-      {/* Header fixe */}
-      <header className="bg-white shadow-sm py-4 px-6 fixed top-0 w-full z-10">
-        <div className="flex justify-between items-center">
+    <div className="flex flex-col min-h-screen w-full bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm py-4 px-6 w-full z-10">
+        <div className="flex justify-between items-center max-w-full w-full">
           <h1 className="text-xl font-semibold text-gray-800">Gestion des Tâches</h1>
           <button
             onClick={handleLogout}
@@ -86,9 +86,9 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      {/* Main content avec largeur maximale et padding uniforme */}
-      <main className="flex-grow w-full p-4 mt-16">
-        <div className="grid gap-4">
+      {/* Main content */}
+      <main className="flex-grow w-full p-4">
+        <div className="grid gap-4 w-full max-w-full">
           {/* Carte de bienvenue */}
           <div className="bg-white rounded-md shadow-sm p-5">
             <h2 className="text-xl font-bold text-gray-800 mb-2">Tableau de bord Étudiant</h2>
@@ -206,10 +206,10 @@ const StudentDashboard = () => {
         </div>
       </main>
       
-      {/* Footer simple */}
-      <footer className="bg-white shadow-sm py-4 px-6 mt-auto">
+      {/* Footer */}
+      <footer className="bg-white shadow-sm py-4 px-6 mt-auto w-full">
         <p className="text-center text-gray-600 text-sm">
-          2025 Gestion des Tâches. Tous droits réservés.
+          © 2025 Gestion des Tâches. Tous droits réservés.
         </p>
       </footer>
     </div>

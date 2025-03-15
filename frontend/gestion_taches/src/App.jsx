@@ -7,7 +7,7 @@ import Profile from './components/profile';
 import AdminDashboard from './components/dashboards/adminDashboard';
 import TeacherDashboard from './components/dashboards/teacherDashboard';
 import StudentDashboard from './components/dashboards/studentDashboard';
-import ProjectList from './components/projects/projectList';
+import projectList from './components/projects/projectList';
 import TaskList from './components/tasks/taskList';
 import PrivateRoute from './components/privateRoute';
 
@@ -60,7 +60,7 @@ const App = () => {
       
       {/* Routes de projets et tâches */}
       <Route path="/projects" element={
-        <PrivateRoute element={<ProjectList />} allowedRoles={['admin', 'teacher', 'student']} />
+        <PrivateRoute element={<projectList />} allowedRoles={['admin', 'teacher', 'student']} />
       } />
       <Route path="/projects/:projectId/tasks" element={
         <PrivateRoute element={<TaskList />} allowedRoles={['admin', 'teacher', 'student']} />

@@ -31,11 +31,9 @@ export const fetchProjects = async () => {
 export const createProject = async (projectData) => {
   try {
     const token = localStorage.getItem('access_token');
-    // Créer un nouvel objet avec les données du projet
     const data = {
       name: projectData.name,
       description: projectData.description,
-      // Le status est automatiquement 'todo' dans le backend
       members_ids: projectData.members || []
     };
     
@@ -54,12 +52,11 @@ export const createProject = async (projectData) => {
 export const updateProject = async (projectId, projectData) => {
   try {
     const token = localStorage.getItem('access_token');
-    // Adapter les données pour qu'elles correspondent à ce que le backend attend
     const data = {
       name: projectData.name,
       description: projectData.description,
       members_ids: projectData.members || [],
-      status: projectData.status // Ajout du status dans la mise à jour
+      status: projectData.status
     };
     
     const response = await axios.patch(`/projects/${projectId}/`, data, {
