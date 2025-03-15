@@ -1,0 +1,59 @@
+{% extends "base.html"%}
+{% block title %}Liste des Tâches{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Liste des Tâches</h2>
+    
+    <!-- Barre de filtres -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <form method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Rechercher une tâche" name="q" value="{{ request.GET.q }}">
+                    <button class="btn btn-primary" type="submit">Rechercher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des tâches -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Projet</th>
+                <th>Assigné à</th>
+                <th>Statut</th>
+                <th>date limite</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.project }}</td>
+                <td>{{ task.assigned_to.username }}</td>
+                <span class="badge bg-{% if task.status == 'todo' %}secondary
+                {% elif task.status == 'in_progress' %}warning
+                {% elif task.status == 'done' %}success{% endif %}">
+                    {{ task.get_status_display }}
+                </span>
+                </td>
+               <td>{{ task.due_date|date:"d F, Y" }}</td>
+                <td>
+                    <a href="{% url 'tasks:task_update' task.id %}" class="btn btn-primary">Modifier</a>
+                    <a href="{% url 'tasks:task_delete' task.id %}" class="btn btn-danger">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">Aucune tâche trouvée.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+</div>
+{% endblock %}

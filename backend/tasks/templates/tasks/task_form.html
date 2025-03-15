@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}task.title|default:"Créer une tâche{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">task.title|default:"Créer une tâche"</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Sauvegarder</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

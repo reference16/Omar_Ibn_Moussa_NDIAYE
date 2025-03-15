@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Tâches du projet {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted mb-0">{{ project.description }}</p>
+        </div>
+        <div>
+            <a href="{% url 'tasks:task_create' project.pk %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle tâche
+            </a>
+            <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Retour aux projets
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% for task in tasks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 {% if task.status == 'completed' %}border-success{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ task.title }}</h5>
+                    <p class="card-text text-muted small">
+                        Échéance : {{ task.due_date|date:"d/m/Y" }}
+                    </p>
+                    <p class="card-text">{{ task.description|truncatewords:30 }}</p>
+                    <p class="card-text">
+                        <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ task.get_status_display }}
+                        </span>
+                        <span class="badge bg-info ms-1">
+                            {{ task.get_priority_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{% url 'tasks:task_delete' task.pk %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Ce projet n'a pas encore de tâches.
+                <a href="{% url 'tasks:task_create' project.pk %}" class="alert-link">Créez la première tâche</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

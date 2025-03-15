@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Detail de la Tache{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Detail de la Tache</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ task.name }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Description: {{ task.description }}</p>
+                    <p class="card-text">Projet: {{ task.project.name }}</p>
+                    <p class="card-text">Statut: {{ task.get_status_display }}</p>
+                    <p class="card-text">Priorité: {{ task.priority }}</p>
+                    <p class="card-text">Date limite: {{ task.due_date|default:"Non défini" }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{% url 'task_update' task.id %}" class="btn btn-primary">Modifier</a>
+                    <a href="{% url 'task_delete' task.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
