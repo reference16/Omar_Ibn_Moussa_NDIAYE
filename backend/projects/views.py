@@ -10,9 +10,44 @@ from rest_framework import permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.renderers import JSONRenderer
 from .permissions import IsProjectOwnerOrMember
-from django.db.models import Q
+from django.db.models import Q, Count
 from users.models import CustomUser
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+
+# Vue pour les statistiques
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+def project_statistics(request):
+    user = request.user
+    
+    # Pour les enseignants : tous les projets
+    if user.role == 'teacher':
+        stats = {
+            'total': Project.objects.count(),
+            'todo': Project.objects.filter(status='todo').count(),
+            'in_progress': Project.objects.filter(status='in_progress').count(),
+            'done': Project.objects.filter(status='done').count(),
+            'my_projects': Project.objects.filter(owner=user).count(),
+            'supervised_projects': Project.objects.filter(members=user).exclude(owner=user).count()
+        }
+    # Pour les étudiants : projets dont ils sont propriétaires ou membres
+    else:
+        stats = {
+            'total': Project.objects.filter(Q(owner=user) | Q(members=user)).distinct().count(),
+            'todo': Project.objects.filter(owner=user, status='todo').count(),
+            'in_progress': Project.objects.filter(
+                (Q(owner=user) | Q(members=user)) & Q(status='in_progress')
+            ).distinct().count(),
+            'done': Project.objects.filter(
+                (Q(owner=user) | Q(members=user)) & Q(status='done')
+            ).distinct().count(),
+            'my_projects': Project.objects.filter(owner=user).count(),
+            'member_projects': Project.objects.filter(members=user).exclude(owner=user).count()
+        }
+    
+    return Response(stats)
 
 #vue normale
 

@@ -21,21 +21,22 @@ const TeacherDashboard = () => {
     urgent: 0
   });
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
     
-    // Vérifier que l'utilisateur est un professeur
-    if (!user.is_teacher && !user.is_staff) {
-      navigate('/dashboard');
+    // Vérifier le rôle une seule fois au montage
+    if (user.role !== 'teacher') {
+      navigate('/student/dashboard');
+      return;
     }
-    
+
     loadStats();
-  }, [user, navigate]);
-  
+  }, [user]); // Dépendance uniquement sur user
+
   const loadStats = async () => {
     try {
       setLoading(true);
@@ -60,44 +61,33 @@ const TeacherDashboard = () => {
       setLoading(false);
     }
   };
-  
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-  
+
   if (!user) {
     return null;
   }
-  
+
   return (
     <div className="flex flex-col min-h-screen w-screen overflow-x-hidden bg-gray-100">
       {/* Header fixe */}
-      <header className="w-full bg-teal-500 text-white shadow-md z-10">
-        <div className="flex justify-between items-center px-4 py-3">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-xl font-bold">FlowTask</h1>
-            <span className="px-2 py-1 text-xs bg-teal-600 rounded-md">Enseignant</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => navigate('/profile')}
-              className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded-md flex items-center transition-colors"
-            >
-              <span className="mr-1">👤</span> Profil
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded-md flex items-center transition-colors"
-            >
-              <span className="mr-1">🚪</span> Déconnexion
-            </button>
-          </div>
+      <header className="bg-white shadow-sm py-4 px-6 fixed top-0 w-full z-10">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-gray-800">Gestion des Tâches</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm transition-colors"
+          >
+            Déconnexion
+          </button>
         </div>
       </header>
 
       {/* Main content avec largeur maximale et padding uniforme */}
-      <main className="flex-grow w-full p-4">
+      <main className="flex-grow w-full p-4 mt-16">
         <div className="grid gap-4">
           {/* Carte de bienvenue */}
           <div className="bg-white rounded-md shadow-sm p-5">
@@ -204,31 +194,21 @@ const TeacherDashboard = () => {
           {/* Projets */}
           <div className="bg-white rounded-md shadow-sm p-5">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <span className="mr-2">📂</span> Mes Projets
+              <span className="mr-2">📂</span> Projets
             </h2>
             
             <div className="bg-gray-50 rounded-md p-4">
-              <div className="flex flex-col space-y-2 mb-4">
-                <div className="flex items-center text-yellow-500">
-                  <span className="mr-2 text-xl">📁</span>
-                  <h3 className="font-semibold">Gestion des Projets</h3>
-                </div>
-                <p className="text-sm text-gray-600 ml-7">
-                  En tant qu'enseignant, vous pouvez voir et gérer tous vos projets. Vous pouvez changer leur état de "À faire" à "En cours" pour les rendre visibles aux étudiants.
-                </p>
-              </div>
-              
-              <div className="pl-4 border-l-2 border-yellow-200">
-                <ProjectList role="teacher" />
-              </div>
+              <ProjectList onProjectsChange={loadStats} />
             </div>
           </div>
         </div>
       </main>
       
       {/* Footer simple */}
-      <footer className="w-full bg-gray-800 text-white py-4 text-center">
-        <p> 2025 FlowTask - Plateforme de gestion de tâches</p>
+      <footer className="bg-white shadow-sm py-4 px-6 mt-auto">
+        <p className="text-center text-gray-600 text-sm">
+          2025 Gestion des Tâches. Tous droits réservés.
+        </p>
       </footer>
     </div>
   );

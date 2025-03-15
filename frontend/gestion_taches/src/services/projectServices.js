@@ -16,7 +16,7 @@ export const PROJECT_STATUS_LABELS = {
 export const fetchProjects = async () => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.get('projects/', {
+    const response = await axios.get('/projects/', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -39,7 +39,7 @@ export const createProject = async (projectData) => {
       members_ids: projectData.members || []
     };
     
-    const response = await axios.post('projects/', data, {
+    const response = await axios.post('/projects/', data, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -62,7 +62,7 @@ export const updateProject = async (projectId, projectData) => {
       status: projectData.status // Ajout du status dans la mise à jour
     };
     
-    const response = await axios.patch(`projects/${projectId}/`, data, {
+    const response = await axios.patch(`/projects/${projectId}/`, data, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -77,7 +77,7 @@ export const updateProject = async (projectId, projectData) => {
 export const updateProjectStatus = async (projectId, status) => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.patch(`projects/${projectId}/`, { status }, {
+    const response = await axios.patch(`/projects/${projectId}/`, { status }, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -92,7 +92,7 @@ export const updateProjectStatus = async (projectId, status) => {
 export const deleteProject = async (projectId) => {
   try {
     const token = localStorage.getItem('access_token');
-    await axios.delete(`projects/${projectId}/`, {
+    await axios.delete(`/projects/${projectId}/`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -106,7 +106,7 @@ export const deleteProject = async (projectId) => {
 export const fetchUsers = async () => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.get('users/', {
+    const response = await axios.get('/users/', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -114,6 +114,21 @@ export const fetchUsers = async () => {
     return response.data;
   } catch (error) {
     console.error("Erreur lors du chargement des utilisateurs :", error);
+    throw error;
+  }
+};
+
+export const fetchProjectStatistics = async () => {
+  try {
+    const token = localStorage.getItem('access_token');
+    const response = await axios.get('/projects/statistics/', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors du chargement des statistiques :', error);
     throw error;
   }
 };

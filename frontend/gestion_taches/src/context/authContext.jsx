@@ -21,6 +21,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const getDashboardPath = (userData) => {
+    const role = userData.role || (userData.is_superuser ? 'admin' : userData.is_staff ? 'teacher' : 'student');
+    switch (role) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'teacher':
+        return '/teacher/dashboard';
+      case 'student':
+        return '/student/dashboard';
+      default:
+        return '/login';
+    }
+  };
+
   const login = async (username, password) => {
     try {
       const response = await axios.post('token/', {
@@ -34,8 +48,11 @@ export const AuthProvider = ({ children }) => {
       
       // Récupérer les informations de l'utilisateur
       const userResponse = await axios.get('users/me/');
-      setUser(userResponse.data);
-      navigate('/dashboard');
+      const userData = userResponse.data;
+      setUser(userData);
+      
+      // Rediriger vers le dashboard approprié
+      navigate(getDashboardPath(userData));
     } catch (error) {
       console.error('Login failed:', error.response?.data || error.message);
       throw error;

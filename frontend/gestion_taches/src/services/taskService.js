@@ -1,5 +1,17 @@
 import axios from '../axios';
 
+export const TASK_STATUS = {
+  TODO: 'todo',
+  IN_PROGRESS: 'in_progress',
+  DONE: 'done'
+};
+
+export const TASK_STATUS_LABELS = {
+  [TASK_STATUS.TODO]: 'À faire',
+  [TASK_STATUS.IN_PROGRESS]: 'En cours',
+  [TASK_STATUS.DONE]: 'Terminé'
+};
+
 export const createTask = async (projectId, title, description, assignedTo, dueDate, status) => {
   try {
     const response = await axios.post(`projects/${projectId}/tasks/`, {

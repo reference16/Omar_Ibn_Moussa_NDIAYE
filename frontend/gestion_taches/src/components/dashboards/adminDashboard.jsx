@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectList from '../projects/projectList';
 import { createTeacher, getUsers } from '../../services/userService';
+import { fetchProjectStatistics } from '../../services/projectServices';
+import { fetchTaskStatistics } from '../../services/taskService';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState({ teachers: [], students: [] });
+  const [projectStats, setProjectStats] = useState({ todo: 0, in_progress: 0, done: 0, total: 0 });
+  const [taskStats, setTaskStats] = useState({ todo: 0, in_progress: 0, done: 0, total: 0 });
 
   useEffect(() => {
     if (!user) {
@@ -32,7 +36,21 @@ const AdminDashboard = () => {
     }
 
     loadUsers();
+    loadStatistics();
   }, [user, navigate]);
+
+  const loadStatistics = async () => {
+    try {
+      const [projectStatsData, taskStatsData] = await Promise.all([
+        fetchProjectStatistics(),
+        fetchTaskStatistics()
+      ]);
+      setProjectStats(projectStatsData);
+      setTaskStats(taskStatsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -122,6 +140,60 @@ const AdminDashboard = () => {
             <p className="text-gray-600">Gérez les utilisateurs et les projets de la plateforme.</p>
           </div>
           
+          {/* Statistiques globales */}
+          <div className="bg-white rounded-md shadow-sm p-5">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="mr-2">📊</span> Statistiques Globales
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Statistiques des projets */}
+              <div className="bg-gray-50 rounded-md p-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Projets</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-md border-l-4 border-blue-500">
+                    <p className="text-sm text-gray-600">À faire</p>
+                    <p className="text-xl font-bold text-blue-500">{projectStats.todo}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-yellow-500">
+                    <p className="text-sm text-gray-600">En cours</p>
+                    <p className="text-xl font-bold text-yellow-500">{projectStats.in_progress}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-green-500">
+                    <p className="text-sm text-gray-600">Terminés</p>
+                    <p className="text-xl font-bold text-green-500">{projectStats.done}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-purple-500">
+                    <p className="text-sm text-gray-600">Total</p>
+                    <p className="text-xl font-bold text-purple-500">{projectStats.total}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Statistiques des tâches */}
+              <div className="bg-gray-50 rounded-md p-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Tâches</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-md border-l-4 border-blue-500">
+                    <p className="text-sm text-gray-600">À faire</p>
+                    <p className="text-xl font-bold text-blue-500">{taskStats.todo}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-yellow-500">
+                    <p className="text-sm text-gray-600">En cours</p>
+                    <p className="text-xl font-bold text-yellow-500">{taskStats.in_progress}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-green-500">
+                    <p className="text-sm text-gray-600">Terminées</p>
+                    <p className="text-xl font-bold text-green-500">{taskStats.done}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-md border-l-4 border-purple-500">
+                    <p className="text-sm text-gray-600">Total</p>
+                    <p className="text-xl font-bold text-purple-500">{taskStats.total}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Actions admin et statistiques */}
           <div className="bg-white rounded-md shadow-sm p-5">
             <div className="flex justify-between items-center mb-4">
@@ -206,7 +278,7 @@ const AdminDashboard = () => {
       
       {/* Footer simple */}
       <footer className="w-full bg-gray-800 text-white py-4 text-center">
-        <p>© 2025 FlowTask - Plateforme de gestion de tâches</p>
+        <p> 2025 FlowTask - Plateforme de gestion de tâches</p>
       </footer>
       
       {/* Modal d'ajout d'enseignant */}
@@ -220,7 +292,7 @@ const AdminDashboard = () => {
                   onClick={() => setShowTeacherModal(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ✕
+                  
                 </button>
               </div>
               
