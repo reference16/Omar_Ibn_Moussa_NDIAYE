@@ -1,11 +1,9 @@
 from django.urls import path
-
 from . import views
 
 app_name = 'tasks'
 
 urlpatterns = [
-
     #Routes pour les vue HTML concernant les tâches
 
     # path('', views.task_list, name='task_list'),
@@ -16,6 +14,7 @@ urlpatterns = [
 
     #Routes pour les API
     path('', views.TasklistView.as_view(), name='api_task_list'),
+    path('statistics/', views.task_statistics, name='api_task_statistics'),
     path('<int:pk>/', views.TaskDetailView.as_view(), name='api_task_detail'),
     path('create/<int:project_id>/', views.TaskCreateView.as_view(), name='api_task_create'),
     path('<int:pk>/update/', views.TaskUpdateView.as_view(), name='api_task_update'),

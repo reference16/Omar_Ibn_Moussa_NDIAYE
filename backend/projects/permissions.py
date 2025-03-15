@@ -10,3 +10,9 @@ class IsProjectOwnerOrMember(permissions.BasePermission):
             return request.user == obj.owner or request.user in obj.members.all()
         # Modification/Suppression uniquement pour le propriétaire
         return request.user == obj.owner
+
+def check_is_project_owner(user, project):
+    """
+    Vérifie si l'utilisateur est le propriétaire du projet
+    """
+    return user == project.owner

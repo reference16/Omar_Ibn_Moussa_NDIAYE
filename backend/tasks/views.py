@@ -7,9 +7,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .serializers import TaskSerializer
 from .permissions import IsTaskAssignedorReadOnly, IsProjectOwnerorReadOnly
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework import permissions
 from django.db import models
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from django.db.models import Count, Q
 
 #vue normale
 
@@ -170,4 +173,40 @@ class TaskDeleteView(generics.DestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [IsTaskAssignedorReadOnly]
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def task_statistics(request):
+    """
+    Retourne les statistiques des tâches pour l'utilisateur connecté
+    """
+    user = request.user
+    project_id = request.query_params.get('project_id')
     
+    # Base queryset
+    tasks = Task.objects.all()
+    
+    # Filtrer par projet si spécifié
+    if project_id:
+        tasks = tasks.filter(project_id=project_id)
+    
+    # Pour un étudiant : tâches qui lui sont assignées
+    if not user.is_staff and not user.is_superuser:
+        tasks = tasks.filter(assigned_to=user)
+    # Pour un enseignant : toutes les tâches de ses projets
+    else:
+        tasks = tasks.filter(project__owner=user)
+    
+    # Calculer les statistiques
+    stats = {
+        'todo': tasks.filter(status='todo').count(),
+        'in_progress': tasks.filter(status='in_progress').count(),
+        'done': tasks.filter(status='done').count(),
+        'total': tasks.count(),
+        'urgent': tasks.filter(
+            status__in=['todo', 'in_progress'],
+            due_date__isnull=False
+        ).count()
+    }
+    
+    return Response(stats)

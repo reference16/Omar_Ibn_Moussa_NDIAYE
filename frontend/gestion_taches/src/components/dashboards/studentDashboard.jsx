@@ -2,12 +2,17 @@ import React, { useEffect, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectList from '../projects/projectList';
-import { fetchTasks } from '../../services/taskService';
+import { fetchTasks, fetchTaskStatistics } from '../../services/taskService';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
-  const [myTasks, setMyTasks] = useState([]);
+  const [taskStats, setTaskStats] = useState({
+    todo: 0,
+    in_progress: 0,
+    done: 0,
+    urgent: 0
+  });
   const [loading, setLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   
@@ -16,19 +21,16 @@ const StudentDashboard = () => {
       navigate('/login');
       return;
     }
+    loadTaskStats();
   }, [user, navigate]);
   
-  const loadMyTasks = async (projectId) => {
-    if (!projectId) return;
-    
+  const loadTaskStats = async (projectId = null) => {
     try {
       setLoading(true);
-      const tasks = await fetchTasks(projectId);
-      const assignedTasks = tasks.filter(task => task.assigned_to === user.id);
-      assignedTasks.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-      setMyTasks(assignedTasks);
+      const stats = await fetchTaskStatistics(projectId);
+      setTaskStats(stats);
     } catch (error) {
-      console.error('Erreur lors du chargement des tâches:', error);
+      console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
       setLoading(false);
     }
@@ -36,7 +38,7 @@ const StudentDashboard = () => {
 
   const handleProjectSelect = (projectId) => {
     setSelectedProject(projectId);
-    loadMyTasks(projectId);
+    loadTaskStats(projectId);
   };
   
   const handleLogout = () => {
@@ -47,19 +49,6 @@ const StudentDashboard = () => {
   if (!user) {
     return null;
   }
-  
-  const todoTasks = myTasks.filter(task => task.status === 'todo').length;
-  const inProgressTasks = myTasks.filter(task => task.status === 'in_progress').length;
-  const doneTasks = myTasks.filter(task => task.status === 'done').length;
-  
-  const today = new Date();
-  const threeDaysFromNow = new Date(today);
-  threeDaysFromNow.setDate(today.getDate() + 3);
-  
-  const urgentTasks = myTasks.filter(task => {
-    const dueDate = new Date(task.due_date);
-    return dueDate <= threeDaysFromNow && task.status !== 'done';
-  });
   
   return (
     <div className="flex flex-col min-h-screen w-screen overflow-x-hidden bg-gray-100">
@@ -111,47 +100,32 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-blue-500">
                   <h3 className="text-gray-700 mb-1">À Faire</h3>
-                  <p className="text-2xl font-bold text-blue-500">{todoTasks}</p>
+                  <p className="text-2xl font-bold text-blue-500">{taskStats.todo}</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-yellow-500">
                   <h3 className="text-gray-700 mb-1">En Cours</h3>
-                  <p className="text-2xl font-bold text-yellow-500">{inProgressTasks}</p>
+                  <p className="text-2xl font-bold text-yellow-500">{taskStats.in_progress}</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-green-500">
                   <h3 className="text-gray-700 mb-1">Terminées</h3>
-                  <p className="text-2xl font-bold text-green-500">{doneTasks}</p>
+                  <p className="text-2xl font-bold text-green-500">{taskStats.done}</p>
                 </div>
               </div>
             )}
           </div>
           
           {/* Tâches urgentes */}
-          {urgentTasks.length > 0 && (
+          {taskStats.urgent > 0 && (
             <div className="bg-white rounded-md shadow-sm p-5">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <span className="mr-2">🔥</span> Tâches Urgentes
               </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {urgentTasks.map(task => (
-                  <div 
-                    key={task.id} 
-                    className="bg-red-50 rounded-md p-4 border border-red-100 hover:shadow-md cursor-pointer transition-shadow"
-                    onClick={() => navigate(`/projects/${task.project}/tasks/${task.id}`)}
-                  >
-                    <h3 className="font-semibold text-gray-800 mb-2 truncate">{task.title}</h3>
-                    <div className="text-sm text-gray-600 mb-2 flex items-center">
-                      <span className="mr-1">⏰</span>
-                      <span>Date limite: {new Date(task.due_date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="text-sm text-gray-600 flex items-center">
-                      <span className="mr-1">📁</span>
-                      <span>Projet: {task.project_name}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-red-50 rounded-md p-4 border border-red-100">
+                <p className="text-red-600 font-semibold">
+                  Vous avez {taskStats.urgent} tâche{taskStats.urgent > 1 ? 's' : ''} urgente{taskStats.urgent > 1 ? 's' : ''} à compléter !
+                </p>
               </div>
             </div>
           )}

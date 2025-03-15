@@ -72,3 +72,20 @@ export const deleteTask = async (taskId) => {
     throw error;
   }
 };
+
+export const fetchTaskStatistics = async (projectId = null) => {
+  try {
+    const url = projectId ? `tasks/statistics/?project_id=${projectId}` : 'tasks/statistics/';
+    const response = await axios.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors du chargement des statistiques:", error);
+    return {
+      todo: 0,
+      in_progress: 0,
+      done: 0,
+      total: 0,
+      urgent: 0
+    };
+  }
+};

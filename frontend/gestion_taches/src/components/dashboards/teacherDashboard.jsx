@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authContext';
 import ProjectList from '../projects/projectList';
 import { fetchProjects } from '../../services/projectServices';
+import { fetchTaskStatistics } from '../../services/taskService';
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -11,6 +12,12 @@ const TeacherDashboard = () => {
     total: 0,
     active: 0,
     completed: 0
+  });
+  const [taskStats, setTaskStats] = useState({
+    todo: 0,
+    in_progress: 0,
+    done: 0,
+    urgent: 0
   });
   const [loading, setLoading] = useState(false);
   
@@ -25,23 +32,28 @@ const TeacherDashboard = () => {
       navigate('/dashboard');
     }
     
-    loadProjectStats();
+    loadStats();
   }, [user, navigate]);
   
-  const loadProjectStats = async () => {
+  const loadStats = async () => {
     try {
       setLoading(true);
-      const projects = await fetchProjects();
+      const [projects, stats] = await Promise.all([
+        fetchProjects(),
+        fetchTaskStatistics()
+      ]);
       
       // Calculer des statistiques sur les projets
-      const active = projects.filter(p => p.tasks?.some(t => t.status !== 'done')).length;
-      const completed = projects.filter(p => p.tasks?.every(t => t.status === 'done')).length;
+      const active = projects.length - stats.done;
+      const completed = stats.done;
       
       setProjectStats({
         total: projects.length,
         active,
         completed
       });
+      
+      setTaskStats(stats);
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
@@ -94,10 +106,10 @@ const TeacherDashboard = () => {
             <p className="text-gray-600">Gérez vos projets et suivez la progression de vos étudiants.</p>
           </div>
           
-          {/* Statistiques */}
+          {/* Statistiques des projets */}
           <div className="bg-white rounded-md shadow-sm p-5">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <span className="mr-2">📊</span> Mes Statistiques
+              <span className="mr-2">📊</span> Statistiques des Projets
             </h2>
             
             {loading ? (
@@ -119,6 +131,41 @@ const TeacherDashboard = () => {
                 <div className="bg-gray-50 rounded-md p-4 border-l-4 border-green-500">
                   <h3 className="text-gray-700 mb-1">Projets Terminés</h3>
                   <p className="text-2xl font-bold text-green-500">{projectStats.completed}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Statistiques des tâches */}
+          <div className="bg-white rounded-md shadow-sm p-5">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="mr-2">📋</span> Statistiques des Tâches
+            </h2>
+            
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-gray-50 rounded-md p-4 border-l-4 border-blue-500">
+                  <h3 className="text-gray-700 mb-1">À Faire</h3>
+                  <p className="text-2xl font-bold text-blue-500">{taskStats.todo}</p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-md p-4 border-l-4 border-yellow-500">
+                  <h3 className="text-gray-700 mb-1">En Cours</h3>
+                  <p className="text-2xl font-bold text-yellow-500">{taskStats.in_progress}</p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-md p-4 border-l-4 border-green-500">
+                  <h3 className="text-gray-700 mb-1">Terminées</h3>
+                  <p className="text-2xl font-bold text-green-500">{taskStats.done}</p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-md p-4 border-l-4 border-red-500">
+                  <h3 className="text-gray-700 mb-1">Urgentes</h3>
+                  <p className="text-2xl font-bold text-red-500">{taskStats.urgent}</p>
                 </div>
               </div>
             )}
@@ -164,7 +211,7 @@ const TeacherDashboard = () => {
       
       {/* Footer simple */}
       <footer className="w-full bg-gray-800 text-white py-4 text-center">
-        <p>© 2025 FlowTask - Plateforme de gestion de tâches</p>
+        <p> 2025 FlowTask - Plateforme de gestion de tâches</p>
       </footer>
     </div>
   );
