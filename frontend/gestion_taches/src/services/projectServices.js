@@ -22,7 +22,8 @@ export const createProject = async (projectData) => {
     const data = {
       name: projectData.name,
       description: projectData.description,
-      members: projectData.members || []
+      // Envoyer les IDs des membres sélectionnés dans le champ members_ids
+      members_ids: projectData.members || []
     };
     
     const response = await axios.post('projects/', data, {
@@ -40,7 +41,15 @@ export const createProject = async (projectData) => {
 export const updateProject = async (projectId, projectData) => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.patch(`projects/${projectId}/`, projectData, {
+    // Adapter les données pour qu'elles correspondent à ce que le backend attend
+    const data = {
+      name: projectData.name,
+      description: projectData.description,
+      // Renommer members en members_ids pour l'API
+      members_ids: projectData.members || []
+    };
+    
+    const response = await axios.patch(`projects/${projectId}/`, data, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

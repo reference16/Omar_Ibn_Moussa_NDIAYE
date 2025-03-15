@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { createTask, updateTask } from '../../services/taskService';
+import AuthContext from '../../context/authContext';
 
 const TaskForm = ({ task, projectId, projectMembers, onTaskCreated, onTaskUpdated }) => {
+  const { user } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -24,6 +26,21 @@ const TaskForm = ({ task, projectId, projectMembers, onTaskCreated, onTaskUpdate
       });
     }
   }, [task]);
+  
+  // Fonction pour déterminer le nom d'affichage d'un membre
+  const getMemberDisplayName = (member) => {
+    if (!member) return '';
+    
+    // Options par ordre de préférence
+    if (member.username) return member.username;
+    if (member.display_name) return member.display_name;
+    if (member.email) return member.email;
+    if (member.name) return member.name;
+    if (member.first_name && member.last_name) return `${member.first_name} ${member.last_name}`;
+    
+    // Si aucune information personnelle n'est disponible, utiliser l'ID
+    return `Utilisateur #${member.id}`;
+  };
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -175,18 +192,24 @@ const TaskForm = ({ task, projectId, projectMembers, onTaskCreated, onTaskUpdate
           <select
             id="assignedTo"
             name="assignedTo"
-            value={formData.assignedTo}
+            value={formData.assignedTo || ''}
             onChange={handleChange}
             required
             disabled={loading}
             className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
           >
             <option value="">Sélectionner un membre</option>
-            {projectMembers && projectMembers.map(member => (
-              <option key={member.id} value={member.id}>
-                {member.username || member.email}
-              </option>
-            ))}
+            {Array.isArray(projectMembers) && projectMembers.length > 0 ? (
+              projectMembers.map(member => (
+                <option key={member.id} value={member.id}>
+                  {getMemberDisplayName(member)}
+                  {member.is_owner ? ' (Propriétaire)' : ''}
+                  {member.id === user?.id ? ' (Moi)' : ''}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>Aucun membre disponible</option>
+            )}
           </select>
         </div>
         

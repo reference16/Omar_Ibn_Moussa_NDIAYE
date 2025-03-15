@@ -5,14 +5,18 @@ const ConfettiEffect = ({ active }) => {
 
   useEffect(() => {
     if (active) {
-      // Générer des pièces de confettis aléatoires
-      const newPieces = Array.from({ length: 100 }).map((_, index) => ({
+      // Générer beaucoup plus de pièces de confettis pour un effet plus impressionnant
+      const newPieces = Array.from({ length: 200 }).map((_, index) => ({
         id: index,
         x: Math.random() * 100, // position horizontale en pourcentage
-        size: Math.random() * 10 + 5, // taille entre 5 et 15px
+        y: Math.random() * 20 - 10, // position verticale initiale légèrement aléatoire
+        size: Math.random() * 12 + 8, // taille entre 8 et 20px (plus grand)
         color: getRandomColor(),
-        fallDuration: Math.random() * 2 + 3, // durée de chute entre 3 et 5 secondes
-        swayDuration: Math.random() * 1 + 1, // durée d'oscillation entre 1 et 2 secondes
+        fallDuration: Math.random() * 3 + 2, // durée de chute entre 2 et 5 secondes
+        swayDuration: Math.random() * 2 + 1, // durée d'oscillation entre 1 et 3 secondes
+        swayAmount: Math.random() * 15 + 10, // amplitude d'oscillation entre 10 et 25px
+        rotationSpeed: Math.random() * 360, // vitesse de rotation aléatoire
+        shape: Math.random() > 0.7 ? 'square' : Math.random() > 0.5 ? 'circle' : 'triangle', // variété de formes
       }));
       
       setConfettiPieces(newPieces);
@@ -28,7 +32,7 @@ const ConfettiEffect = ({ active }) => {
     }
   }, [active]);
   
-  // Couleurs vives pour les confettis
+  // Couleurs vives pour les confettis avec plus de variété et d'éclat
   const getRandomColor = () => {
     const colors = [
       '#f44336', // rouge
@@ -46,56 +50,110 @@ const ConfettiEffect = ({ active }) => {
       '#FFEB3B', // jaune
       '#FFC107', // ambre
       '#FF9800', // orange
-      '#FF5722'  // orange foncé
+      '#FF5722', // orange foncé
+      '#FF1744', // rouge accent
+      '#F50057', // rose accent
+      '#D500F9', // violet accent
+      '#651FFF', // violet foncé accent
+      '#3D5AFE', // indigo accent
+      '#00B0FF', // bleu accent
+      '#1DE9B6', // teal accent
+      '#00E676', // vert accent
+      '#FFEA00', // jaune accent
+      '#FFC400', // ambre accent
+      '#FF9100', // orange accent
+      '#FF3D00'  // orange foncé accent
     ];
     return colors[Math.floor(Math.random() * colors.length)];
+  };
+  
+  const getShapeStyle = (piece) => {
+    const baseStyle = {
+      left: `${piece.x}%`,
+      top: `${piece.y}%`,
+      width: `${piece.size}px`,
+      height: `${piece.size}px`,
+      backgroundColor: piece.color,
+      position: 'absolute',
+      opacity: 1,
+      zIndex: 60,
+      boxShadow: `0 0 6px ${piece.color}`, // ajout d'une lueur
+      animation: `
+        confetti-fall-${piece.id} ${piece.fallDuration}s cubic-bezier(0.250, 0.460, 0.450, 0.940) forwards,
+        confetti-sway-${piece.id} ${piece.swayDuration}s ease-in-out alternate infinite,
+        confetti-rotate-${piece.id} ${piece.fallDuration * 0.5}s linear infinite
+      `
+    };
+
+    // Styles spécifiques selon la forme
+    if (piece.shape === 'circle') {
+      return {
+        ...baseStyle,
+        borderRadius: '50%',
+      };
+    } else if (piece.shape === 'triangle') {
+      return {
+        ...baseStyle,
+        backgroundColor: 'transparent',
+        width: 0,
+        height: 0,
+        borderLeft: `${piece.size / 2}px solid transparent`,
+        borderRight: `${piece.size / 2}px solid transparent`,
+        borderBottom: `${piece.size}px solid ${piece.color}`,
+      };
+    }
+    // Default is square
+    return {
+      ...baseStyle,
+      borderRadius: `${Math.random() * 30}%`,
+    };
   };
   
   if (confettiPieces.length === 0) return null;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
       {confettiPieces.map(piece => (
         <div
           key={piece.id}
-          className="absolute"
-          style={{
-            left: `${piece.x}%`,
-            top: '-10px',
-            width: `${piece.size}px`,
-            height: `${piece.size}px`,
-            backgroundColor: piece.color,
-            borderRadius: Math.random() > 0.5 ? '50%' : '0%', // cercles ou carrés
-            transform: `rotate(${Math.random() * 360}deg)`,
-            opacity: 1,
-            animation: `
-              confetti-fall ${piece.fallDuration}s linear forwards,
-              confetti-shake ${piece.swayDuration}s ease-in-out alternate infinite
-            `
-          }}
+          style={getShapeStyle(piece)}
         />
       ))}
       
-      <style jsx>{`
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(-10px) rotate(0deg);
-            opacity: 1;
+      <style jsx global>{`
+        ${confettiPieces.map(piece => `
+          @keyframes confetti-fall-${piece.id} {
+            0% {
+              transform: translateY(-10px);
+              opacity: 1;
+            }
+            80% {
+              opacity: 0.8;
+            }
+            100% {
+              transform: translateY(105vh);
+              opacity: 0;
+            }
           }
-          100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
+          
+          @keyframes confetti-sway-${piece.id} {
+            0% {
+              transform: translateX(-${piece.swayAmount}px);
+            }
+            100% {
+              transform: translateX(${piece.swayAmount}px);
+            }
           }
-        }
-        
-        @keyframes confetti-shake {
-          0% {
-            transform: translateX(0px);
+          
+          @keyframes confetti-rotate-${piece.id} {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(${piece.rotationSpeed}deg);
+            }
           }
-          100% {
-            transform: translateX(25px);
-          }
-        }
+        `).join('\n')}
       `}</style>
     </div>
   );

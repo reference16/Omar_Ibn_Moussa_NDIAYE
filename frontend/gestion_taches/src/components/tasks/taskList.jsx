@@ -89,11 +89,43 @@ const TaskList = () => {
         return;
       }
       
+      // S'assurer que la structure des membres est correcte
+      // Créer un tableau complet de tous les membres du projet
+      if (projectData) {
+        // Si projectData.members n'existe pas ou n'est pas un tableau, on initialise un tableau vide
+        const members = Array.isArray(projectData.members) ? [...projectData.members] : [];
+        
+        // Transformer tous les membres pour s'assurer qu'ils ont un format cohérent
+        const formattedMembers = members.map(member => ({
+          ...member,
+          is_owner: projectData.owner && member.id === projectData.owner.id
+        }));
+        
+        // Vérifier si le propriétaire est déjà inclus dans les membres
+        // Si non, l'ajouter au tableau des membres avec le flag is_owner
+        if (projectData.owner && !formattedMembers.some(member => member.id === projectData.owner.id)) {
+          formattedMembers.push({
+            ...projectData.owner,
+            is_owner: true
+          });
+        }
+        
+        // Utiliser formattedMembers au lieu de members
+        projectData.allMembers = formattedMembers;
+        
+        // Mettre à jour projectData avec le tableau complet des membres
+        projectData.allMembers = members;
+      }
+      
       setProject(projectData);
       
       // Charger les tâches du projet
       const tasksData = await fetchTasks(projectId);
       setTasks(tasksData);
+      
+      // Log pour débogage
+      console.log("Projet chargé:", projectData);
+      console.log("Membres disponibles:", projectData?.allMembers);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       setError('Erreur lors du chargement des données');
@@ -124,7 +156,7 @@ const TaskList = () => {
   const doneTasks = tasks.filter(task => task.status === 'done');
   
   return (
-    <div className="min-h-screen w-full bg-gray-100">
+    <div className="fixed inset-0 flex flex-col bg-gray-100">
       {/* Header */}
       <header className="bg-teal-500 text-white shadow-md">
         <div className="container mx-auto px-4 py-4">
@@ -154,9 +186,9 @@ const TaskList = () => {
         </div>
       </header>
       
-      <main className="container mx-auto px-4 py-6">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md">
+          <div className="m-4 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md">
             <p className="flex items-center">
               <span className="mr-2">❌</span> {error}
             </p>
@@ -164,24 +196,24 @@ const TaskList = () => {
         )}
         
         {loading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 h-full px-2 pb-2">
             {/* Colonne À faire */}
             <div 
               ref={todoColumnRef}
-              className="bg-blue-50 rounded-md shadow-sm overflow-hidden"
+              className="bg-blue-50 rounded-md shadow-sm flex flex-col h-full overflow-hidden"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, 'todo')}
             >
-              <div className="bg-blue-500 text-white py-2 px-4">
+              <div className="bg-blue-500 text-white py-2 px-4 sticky top-0 z-10">
                 <h2 className="text-lg font-semibold">À faire</h2>
               </div>
-              <div className="p-4 h-full min-h-[50vh]">
+              <div className="p-4 flex-1 overflow-y-auto">
                 {todoTasks.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md">
+                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md h-full flex items-center justify-center">
                     <p>Aucune tâche à faire</p>
                   </div>
                 ) : (
@@ -210,16 +242,16 @@ const TaskList = () => {
             {/* Colonne En cours */}
             <div 
               ref={inProgressColumnRef}
-              className="bg-yellow-50 rounded-md shadow-sm overflow-hidden"
+              className="bg-yellow-50 rounded-md shadow-sm flex flex-col h-full overflow-hidden"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, 'in_progress')}
             >
-              <div className="bg-yellow-500 text-white py-2 px-4">
+              <div className="bg-yellow-500 text-white py-2 px-4 sticky top-0 z-10">
                 <h2 className="text-lg font-semibold">En cours</h2>
               </div>
-              <div className="p-4 h-full min-h-[50vh]">
+              <div className="p-4 flex-1 overflow-y-auto">
                 {inProgressTasks.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md">
+                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md h-full flex items-center justify-center">
                     <p>Aucune tâche en cours</p>
                   </div>
                 ) : (
@@ -248,16 +280,16 @@ const TaskList = () => {
             {/* Colonne Terminées */}
             <div 
               ref={doneColumnRef}
-              className="bg-green-50 rounded-md shadow-sm overflow-hidden"
+              className="bg-green-50 rounded-md shadow-sm flex flex-col h-full overflow-hidden"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, 'done')}
             >
-              <div className="bg-green-500 text-white py-2 px-4">
+              <div className="bg-green-500 text-white py-2 px-4 sticky top-0 z-10">
                 <h2 className="text-lg font-semibold">Terminées</h2>
               </div>
-              <div className="p-4 h-full min-h-[50vh]">
+              <div className="p-4 flex-1 overflow-y-auto">
                 {doneTasks.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md">
+                  <div className="text-center text-gray-500 py-6 border-2 border-dashed border-gray-300 rounded-md h-full flex items-center justify-center">
                     <p>Aucune tâche terminée</p>
                   </div>
                 ) : (
@@ -308,7 +340,7 @@ const TaskList = () => {
               <TaskForm 
                 projectId={parseInt(projectId)}
                 onTaskCreated={handleTaskCreated}
-                projectMembers={project ? project.members : []}
+                projectMembers={project?.allMembers || []}
               />
             </div>
           </div>
