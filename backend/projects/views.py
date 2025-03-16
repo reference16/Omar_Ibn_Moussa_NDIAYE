@@ -162,7 +162,9 @@ class ProjectListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        # Utiliser Q objects pour combiner les conditions sans union()
+        # Projets visibles :
+        # 1. Tous les projets dont l'utilisateur est propriétaire
+        # 2. Les projets non "todo" dont l'utilisateur est membre
         return Project.objects.filter(
             Q(owner=user) |  # Tous les projets dont l'utilisateur est propriétaire
             (Q(members=user) & ~Q(status='todo'))  # Les projets où l'utilisateur est membre ET qui ne sont pas "à faire"
@@ -180,6 +182,14 @@ class ProjectDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsProjectOwnerOrMember]
     renderer_classes = [JSONRenderer]
+
+    def get_queryset(self):
+        user = self.request.user
+        # Même logique que pour la liste
+        return Project.objects.filter(
+            Q(owner=user) |  # Tous les projets dont l'utilisateur est propriétaire
+            (Q(members=user) & ~Q(status='todo'))  # Les projets où l'utilisateur est membre ET qui ne sont pas "à faire"
+        ).distinct().select_related('owner')
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
