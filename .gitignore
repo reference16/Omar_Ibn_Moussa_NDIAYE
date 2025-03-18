@@ -1,5 +1,6 @@
 # Environnement virtuel à la racine
 /venv/
+/.venv/
 
 # Fichiers dans le dossier backend
 /backend/.env
