@@ -1,17 +1,13 @@
-# Environnement virtuel
-venv/
-env/
-.env/
-.venv/
-backend/.env
+# Environnement virtuel à la racine
+/venv/
 
-# Fichiers compilés Python
+# Fichiers dans le dossier backend
+/backend/.env
+/backend/*.sqlite3
+/backend/db.sqlite3
+
+# Fichiers Python compilés (partout dans le projet)
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Base de données locale
-db.sqlite3
-
-# Fichiers de configuration locaux
-.env
